@@ -8,9 +8,8 @@ shinyServer(function(input, output) {
         
         top5_sales <- vgsales[1:5, ]
         df <- data.frame(Name = top5_sales$Name, Global_Sales = top5_sales$Global_Sales)
-        df$Name <- factor(df$Name, levels = df$Name[order(df$Global_Sales, decreasing = TRUE)])
-        ggplot(df) + geom_bar(stat = "identity", aes(Name, Global_Sales))
-
+        df$Name <- factor(df$Name, levels = df$Name[order(df$Global_Sales)])
+        ggplot(df) + geom_bar(stat = "identity", aes(Name, Global_Sales)) + coord_flip()
     })
 
 })
