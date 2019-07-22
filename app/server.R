@@ -1,13 +1,15 @@
 library(shiny)
+library(ggplot2)
 
 shinyServer(function(input, output) {
     output$salesPlot <- renderPlot({
         
         vgsales <- read_game_sales_csv()
         
-        top5_sales <- vgsales[1:5, 10]
-        top5_names <- vgsales[1:5, 1]
-        barplot(top5_sales, names.arg=top5_names, col = 'darkgray', border = 'white')
+        top5_sales <- vgsales[1:5, ]
+        df <- data.frame(Name = top5_sales$Name, Global_Sales = top5_sales$Global_Sales)
+        df$Name <- factor(df$Name, levels = df$Name[order(df$Global_Sales, decreasing = TRUE)])
+        ggplot(df) + geom_bar(stat = "identity", aes(Name, Global_Sales))
 
     })
 
