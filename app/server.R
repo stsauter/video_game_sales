@@ -5,8 +5,8 @@ shinyServer(function(input, output) {
         
         vgsales <- read_game_sales_csv()
         
-        top5_sales <- vgsales[1:5, 11]
-        top5_names <- vgsales[1:5, 2]
+        top5_sales <- vgsales[1:5, 10]
+        top5_names <- vgsales[1:5, 1]
         barplot(top5_sales, names.arg=top5_names, col = 'darkgray', border = 'white')
 
     })
