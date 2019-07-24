@@ -1,21 +1,15 @@
 library(shiny)
-library(ggplot2)
+
+source("helpers/raw_data.R")
+source("helpers/game_analysis.R")
+
 
 shinyServer(function(input, output) {
-    output$salesPlot <- renderPlot({
-        
-        vgsales <- read_game_sales_csv()
-        
-        top5_sales <- vgsales[1:5, ]
-        df <- data.frame(Name = top5_sales$Name, Global_Sales = top5_sales$Global_Sales)
-        df$Name <- factor(df$Name, levels = df$Name[order(df$Global_Sales)])
-        ggplot(df) + geom_bar(stat = "identity", aes(Name, Global_Sales)) + coord_flip()
-    })
+    tab_games_rendering(input, output)
+    tab_rawdata_rendering(input, output)
 
 })
 
 
-read_game_sales_csv <- function(){
-    vgsales <- read.csv2("./data/vgsales.csv", header = TRUE, sep = ",", dec=".")
-    
-}
+
+

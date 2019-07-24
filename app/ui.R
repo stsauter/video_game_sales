@@ -1,11 +1,40 @@
 library(shiny)
+library(ggplot2)
 
-shinyUI(fluidPage(
+source("helpers/raw_data.R")
+source("helpers/game_analysis.R")
 
-    # Application title
-    titlePanel("Top 5 games of all times"),
-
-    mainPanel(
-        plotOutput("salesPlot")
+shinyUI(function () {
+    navbarPage("Videospiel-Marktanalyse",
+               tabPanel("Spiele", tab_games_layout()),
+               tabPanel("Plattformen", render_platforms_tab()),
+               tabPanel("Genres", render_genres_tab()),
+               tabPanel("Publisher", render_publisher_tab()),
+               tabPanel("Rohdaten", tab_rawdata_layout())
     )
-))
+
+})
+
+
+
+render_platforms_tab <- function(){
+    fluidPage(
+      
+        titlePanel("Hier werden die Plattformen analysiert")
+    )
+}
+
+render_genres_tab <- function(){
+    fluidPage(
+      
+        titlePanel("Hier werden die Genres analysiert")
+    )
+}
+
+render_publisher_tab <- function(){
+    fluidPage(
+       
+        titlePanel("Hier werden die Publisher analysiert")
+    )
+}
+
