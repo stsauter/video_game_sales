@@ -7,12 +7,20 @@ game_plot_names <- c("top_games_plot")
 
 tab_games_layout <- function(){
   fluidPage(
-    
     titlePanel("Meistverkaufte Spiele"),
     
-    mainPanel(
-      plotOutput(game_plot_names[1])
+    fluidRow(
+      column(3,
+             wellPanel(
+               sliderInput("obs", "Zeitraum:",  
+                           min = 1980, max = 2016, sep ="", value = c(1980, 2016))
+             )       
+      ),
+      column(9,
+             plotOutput(game_plot_names[1])
+      )
     )
+  
   )
 }
 
