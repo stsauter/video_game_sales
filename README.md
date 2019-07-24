@@ -5,10 +5,9 @@ Zudem wird eine Prognose f&uuml;r die kommenden Jahre erstellt.
 Der analysierte Datensatz stammt von: [Video Game Sales and Ratings](https://www.kaggle.com/kendallgillies/video-game-sales-and-ratings)
 
 ## Verwendete Bibliotheken
-Folgende Bibliotheken wurden verwendet:
+Folgende R-Bibliotheken wurden verwendet:
 * shiny
 * ggplot2
-* DT
 
 ## Starten der App
 Mit folgendem Befehl kann die App direkt in RStudio gestartet werden:
