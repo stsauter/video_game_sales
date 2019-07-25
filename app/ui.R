@@ -1,5 +1,6 @@
 library(shiny)
 library(ggplot2)
+library(randomcoloR)
 
 source("helpers/raw_data.R")
 source("helpers/game_analysis.R")

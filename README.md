@@ -8,6 +8,7 @@ Der analysierte Datensatz stammt von: [Video Game Sales and Ratings](https://www
 Folgende R-Bibliotheken wurden verwendet:
 * shiny
 * ggplot2
+* randomcoloR
 
 ## Starten der App
 Mit folgendem Befehl kann die App direkt in RStudio gestartet werden:
