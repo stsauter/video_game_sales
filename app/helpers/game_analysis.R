@@ -62,7 +62,7 @@ render_top_games <- function(input, output){
   output[[game_outs[1]]] <- renderPlot({
     vgsales <- data_input()
     timespan <- input[[game_ins[2]]]
-    print(class(timespan))
+ 
     filtered_df <- subset(vgsales, as.numeric(Year_of_Release) >= timespan[1] & as.numeric(Year_of_Release) <= timespan[2])
     top_sales <- filtered_df[1:input[[game_ins[1]]], ]
   
@@ -71,8 +71,10 @@ render_top_games <- function(input, output){
     df <- ensure_unique_game_name(df)
   
     #  df$Name <- factor(df$Name, levels = df$Name[order(df$Global_Sales)])
-    ggplot(df) + geom_bar(stat = "identity", aes(x=reorder(Name, Global_Sales), Global_Sales, fill = Platform)) + coord_flip() + scale_fill_manual(values = platform_colors())
-  })#,height = 600)
+    ggplot(df) + geom_bar(stat = "identity", aes(x=reorder(Name, Global_Sales), Global_Sales, fill = Platform))  + coord_flip() +  
+      scale_x_discrete(name ="Spiel") + scale_y_continuous(name ="Weltweit verkauft Exemplare (Angabe in Mio.)") + 
+      labs(fill = "Plattform") + scale_fill_manual(values = platform_colors()) + theme(text = element_text(size=20))
+  }, height = 700)
 }
 
 ensure_unique_game_name <- function(game_df){
@@ -86,10 +88,8 @@ ensure_unique_game_name <- function(game_df){
 }
 
 create_platform_colors <- function(platforms){
-  colors <- c(rainbow(50), terrain.colors(50))
-  set.seed(147) 
-  colors <- sample(colors, size = length(platforms))
+  set.seed(1) 
+  colors <-distinctColorPalette(length(platforms))
   names(colors) <- platforms
-  barplot(1:31, col=colors)
   return(colors)
 }
