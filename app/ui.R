@@ -22,7 +22,7 @@ shinyUI(function () {
 render_platforms_tab <- function(){
     fluidPage(
       
-        titlePanel("Hier werden die Plattformen analysiert")
+        titlePanel("Hier werden die Plattformen analysiert23")
     )
 }
 
