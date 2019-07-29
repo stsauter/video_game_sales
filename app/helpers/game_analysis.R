@@ -1,11 +1,11 @@
 
-game_ins <- c("game_num_bars", "game_timespan")
-game_outs <- c("games_plot")
+game_ins <- c("game_num_bars", "game_timespan", "game_salesplot_type")
+game_outs <- c("games_plot", "game_sales_plot", "game_sales_rel_plot")
 
 tab_games_layout <- function(){
   tabsetPanel(type = "tabs",
               tabPanel("Bestseller", subtab_game_bestsellers()),
-              tabPanel("Zeitverlauf", subtab_game_charts())
+              tabPanel("Verkaufszahlen", subtab_game_sales())
   )
 }
 
@@ -33,12 +33,31 @@ subtab_game_bestsellers <- function(){
   )
 }
 
-subtab_game_charts <- function(){
+subtab_game_sales <- function(){
   fluidPage(
     titlePanel("Zeitlicher Verlauf der Verkaufszahlen aller Spiele"),
     br(),
-    br()
-   
+    fluidRow(
+      column(3,
+             selectizeInput(
+               game_ins[3], 'Darstellung als', choices = c("Liniendiagramm", "Balkendiagramm")
+               
+             )  
+      )
+    ),
+    fluidRow(
+      column(12,
+             plotOutput(game_outs[2])
+      )
+    ),
+    br(),
+    titlePanel("Marktanteile nach Region"),
+    br(),
+    fluidRow(
+      column(12,
+             plotOutput(game_outs[3])
+      )
+    )
   )
 }
 
@@ -46,7 +65,7 @@ subtab_game_charts <- function(){
 tab_games_rendering <- function(input, output){
     
   render_top_games(input, output)
-  
+  render_game_sales(input, output)
 }
 
 
@@ -72,7 +91,7 @@ render_top_games <- function(input, output){
   
     #  df$Name <- factor(df$Name, levels = df$Name[order(df$Global_Sales)])
     ggplot(df) + geom_bar(stat = "identity", aes(x=reorder(Name, Global_Sales), Global_Sales, fill = Platform))  + coord_flip() +  
-      scale_x_discrete(name ="Spiel") + scale_y_continuous(name ="Weltweit verkauft Exemplare (Angabe in Mio.)") + 
+      scale_x_discrete(name ="Spiel") + scale_y_continuous(name ="Weltweit verkaufte Exemplare (Angabe in Mio.)") + 
       labs(fill = "Plattform") + scale_fill_manual(values = platform_colors()) + theme(text = element_text(size=20))
   }, height = 700)
 }
@@ -88,8 +107,59 @@ ensure_unique_game_name <- function(game_df){
 }
 
 create_platform_colors <- function(platforms){
-  set.seed(1) 
-  colors <-distinctColorPalette(length(platforms))
-  names(colors) <- platforms
+
+  # colors <-distinctColorPalette(length(platforms))
+  # names(colors) <- platforms
+  # color_file <- tempfile("color_palette", fileext = ".rds")
+  # saveRDS(colors, color_file)
+  colors <- readRDS("persistence/random_colors.rds")
   return(colors)
+}
+
+
+render_game_sales <- function(input, output){
+  
+  data_input <- reactive({
+    vgsales <- read_game_sales_csv()
+    sales_by_year <- aggregate(list(vgsales$NA_Sales, vgsales$EU_Sales, vgsales$JP_Sales, vgsales$Other_Sales), 
+                                    by=list(vgsales$Year_of_Release), FUN=sum)
+    sales_by_year <- setNames(sales_by_year, c("Year_of_Release", "NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales"))
+    sales_by_year <- subset(sales_by_year, as.numeric(Year_of_Release) >= 1980 & as.numeric(Year_of_Release) <= 2016)
+    vgsales_pivot <- gather(sales_by_year, "NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales", key = "Region", value= "Sales")
+   
+  })
+  
+  output[[game_outs[2]]] <- renderPlot({
+
+    vgsales <- data_input()
+    chart_type <- input[[game_ins[3]]]
+    
+    if (chart_type == "Liniendiagramm"){
+      line_width <- 1.0
+      ggplot(vgsales) + geom_line(aes(Year_of_Release, Sales, group = Region, color = Region), size = line_width) +
+        scale_x_discrete(name ="Jahr") + scale_y_continuous(name ="Verkaufte Spiele (Angabe in Mio.)") +
+        scale_color_manual(name = "Region",
+                           labels = c("Europa", "Japan", "USA", "Rest der Welt"), 
+                           values = c("EU_Sales"="#F8766D","JP_Sales"="#7CAE00","NA_Sales"="#00BFC4","Other_Sales"="#C77CFF")) +
+        theme(text = element_text(size=20)) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+    }
+    else{
+      ggplot(vgsales) + geom_bar(stat = "identity", aes(Year_of_Release, Sales, fill = Region)) +
+        scale_x_discrete(name ="Jahr") + scale_y_continuous(name ="Verkaufte Spiele (Angabe in Mio.)") +
+        scale_fill_discrete(name = "Region", labels = c("Europa", "Japan", "USA", "Rest der Welt")) +
+        theme(text = element_text(size=20)) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+      
+    }
+   
+  })
+  
+  output[[game_outs[3]]] <- renderPlot({
+    
+    vgsales <- data_input()
+    ggplot(vgsales) + geom_bar(stat = "identity", position = "fill", aes(Year_of_Release, Sales, fill = Region)) + 
+      scale_x_discrete(name ="Jahr") + scale_y_continuous(name ="Relativer Anteil in %", labels = scales::percent) +
+      scale_fill_discrete(name = "Region", labels = c("Europa", "Japan", "USA", "Rest der Welt")) +
+      theme(text = element_text(size=20)) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+    
+  })
 }
