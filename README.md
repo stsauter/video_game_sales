@@ -9,6 +9,7 @@ Folgende R-Bibliotheken wurden verwendet:
 * shiny
 * ggplot2
 * randomcoloR
+* tidyr
 
 ## Starten der App
 Mit folgendem Befehl kann die App direkt in RStudio gestartet werden:
