@@ -1,10 +1,11 @@
 
 game_ins <- c("game_num_bars", "game_region", "game_timespan", "game_differ_platforms", "game_salesplot_type")
-game_outs <- c("games_plot", "games_top_region_plot", "game_sales_plot", "game_sales_rel_plot")
+game_outs <- c("games_plot", "games_top_annual_plot", "games_top_region_plot", "game_sales_plot", "game_sales_rel_plot")
 
 tab_games_layout <- function(){
   tabsetPanel(type = "tabs",
               tabPanel("Bestseller", subtab_game_bestsellers()),
+              tabPanel("Bestseller je Jahr", subtab_game_annual_bestsellers()),
               tabPanel("Bestseller je Region", subtab_game_region_bestsellers()),
               tabPanel("Verkaufszahlen", subtab_game_sales())
   )
@@ -44,11 +45,9 @@ subtab_game_bestsellers <- function(){
   )
 }
 
-
-
-subtab_game_region_bestsellers <- function(){
+subtab_game_annual_bestsellers <- function(){
   fluidPage(
-    titlePanel("Top 3 Spiele je Region"),
+    titlePanel("Bestseller der letzten 10 Jahre"),
     br(),
     br(),
     fluidRow(
@@ -58,6 +57,20 @@ subtab_game_region_bestsellers <- function(){
     )
   )
 }
+
+subtab_game_region_bestsellers <- function(){
+  fluidPage(
+    titlePanel("Top 3 Spiele je Region"),
+    br(),
+    br(),
+    fluidRow(
+      column(12,
+             plotOutput(game_outs[3])
+      )
+    )
+  )
+}
+
 
 subtab_game_sales <- function(){
   fluidPage(
@@ -73,7 +86,7 @@ subtab_game_sales <- function(){
     ),
     fluidRow(
       column(12,
-             plotOutput(game_outs[3])
+             plotOutput(game_outs[4])
       )
     ),
     br(),
@@ -81,7 +94,7 @@ subtab_game_sales <- function(){
     br(),
     fluidRow(
       column(12,
-             plotOutput(game_outs[4])
+             plotOutput(game_outs[5])
       )
     )
   )
@@ -91,6 +104,7 @@ subtab_game_sales <- function(){
 tab_games_rendering <- function(input, output){
     
   render_top_games(input, output)
+  render_top_annual_games(input, output)
   render_top_region_games(input, output)
   render_game_sales(input, output)
 }
@@ -164,13 +178,39 @@ create_platform_colors <- function(platforms){
   return(colors)
 }
 
-render_top_region_games <- function(input, output){
+render_top_annual_games <- function(input, output){
   
   data_input <- reactive({
     vgsales <- read_game_sales_csv()
   })
   
   output[[game_outs[2]]] <- renderPlot({
+    vgsales <- data_input()
+    
+    df_games <- vgsales %>%
+      group_by(Name, Year_of_Release) %>% 
+      summarise(Global_Sales = sum(Global_Sales))
+    
+    df_top_games <- df_games %>% 
+      group_by(Year_of_Release)  %>%  
+      filter(Global_Sales== max(Global_Sales) & Year_of_Release >= 2006 & Year_of_Release <= 2016) %>% 
+      arrange(Year_of_Release)
+
+    ggplot(df_top_games) + geom_bar(stat = "identity", aes(Year_of_Release, Global_Sales, fill = Name))  + 
+      scale_x_discrete(name ="Jahr") + scale_y_continuous(name = "Weltweit verkaufte Exemplare (Angabe in Mio.)") + 
+      scale_fill_discrete(breaks = df_top_games$Name) + labs(fill = "Spiel") +
+      theme(text = element_text(size=20)) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+    
+  }, height = 700)
+}
+
+render_top_region_games <- function(input, output){
+  
+  data_input <- reactive({
+    vgsales <- read_game_sales_csv()
+  })
+  
+  output[[game_outs[3]]] <- renderPlot({
     vgsales <- data_input()
     
     df_games <- vgsales %>%
@@ -207,7 +247,7 @@ render_game_sales <- function(input, output){
    
   })
   
-  output[[game_outs[3]]] <- renderPlot({
+  output[[game_outs[4]]] <- renderPlot({
 
     vgsales <- data_input()
     chart_type <- input[[game_ins[5]]]
@@ -231,7 +271,7 @@ render_game_sales <- function(input, output){
    
   })
   
-  output[[game_outs[4]]] <- renderPlot({
+  output[[game_outs[5]]] <- renderPlot({
     
     vgsales <- data_input()
     ggplot(vgsales) + geom_bar(stat = "identity", position = "fill", aes(Year_of_Release, Sales, fill = Region)) + 
