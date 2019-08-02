@@ -44,6 +44,8 @@ subtab_game_bestsellers <- function(){
   )
 }
 
+
+
 subtab_game_region_bestsellers <- function(){
   fluidPage(
     titlePanel("Top 3 Spiele je Region"),
@@ -184,8 +186,8 @@ render_top_region_games <- function(input, output){
     facet_labels <- c("Europa", "Japan", "USA", "Rest der Welt")
     names(facet_labels) <- c("EU_Sales", "JP_Sales",  "NA_Sales", "Other_Sales")
     ggplot(df_top_games) + geom_bar(stat = "identity", aes(Name, Sales, fill = Name))  + 
-      scale_x_discrete(name ="Spiel") + scale_y_continuous(name = "Verkaufte Exemplare (Angabe in Mio.)") + 
-      theme(text = element_text(size=20)) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      scale_y_continuous(name = "Verkaufte Exemplare (Angabe in Mio.)") + 
+      theme(text = element_text(size=20), axis.title.x=element_blank(), axis.text.x=element_blank()) +
       facet_grid(. ~ Region, scales = "free",  space = "free", labeller = labeller(Region = facet_labels)) + 
       labs(fill = "Spiel") 
    
