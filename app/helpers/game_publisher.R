@@ -1,12 +1,13 @@
 
 publisher_ins <- c("publisher_num_bars", "publisher_region", "publisher_timespan")
-publisher_outs <- c("publisher_plot", "publisher_sells_plot")
+publisher_outs <- c("publisher_plot", "publisher_sells_plot", "publisher_annual", "publisher_regional")
 
 tab_publisher_layout <- function(){
   tabsetPanel(type = "tabs",
               tabPanel("Übersicht", subtab_top_selling_publisher()),
-              tabPanel("Jährliche Verkaufszahlen", subtab_publisher_sales())
-              #tabPanel("Top Herausgeber je Jahr", subtab_top_selling_publisher())
+              tabPanel("Jährliche Verkaufszahlen", subtab_publisher_sales()),
+              tabPanel("Top Herausgeber je Jahr", subtab_publisher_annual()),
+              tabPanel("Top Herausgeber je Region", subtab_publisher_regional())
   )
 }
 
@@ -41,6 +42,7 @@ subtab_top_selling_publisher <- function(){
   )
 }
 
+
 subtab_publisher_sales <- function(){
   fluidPage(
     titlePanel("Jährliche Verkaufszahlen der Top 5 Herausgeber"),
@@ -54,11 +56,38 @@ subtab_publisher_sales <- function(){
   )
 }
 
+subtab_publisher_annual <- function(){
+  fluidPage(
+    titlePanel("Top Herausgeber je Jahr"),
+    br(),
+    br(),
+    fluidRow(
+      column(12,
+             plotOutput(publisher_outs[3])
+      )
+    )
+  )
+}
+
+subtab_publisher_regional <- function(){
+  fluidPage(
+    titlePanel("Top 3 Herausgeber je Region"),
+    br(),
+    br(),
+    fluidRow(
+      column(12,
+             plotOutput(publisher_outs[4])
+      )
+    )
+  )
+}
 
 tab_publisher_rendering <- function(input, output){
     
   render_top_selling_publisher(input, output)
   render_publisher_sales(input, output)
+  render_publisher_annual(input, output)
+  render_publisher_regional(input, output)
 }
 
 
@@ -102,6 +131,7 @@ render_top_selling_publisher <- function(input, output){
   }, height = 700)
 }
 
+
 render_publisher_sales <- function(input, output){
   
   data_input <- reactive({
@@ -130,3 +160,59 @@ render_publisher_sales <- function(input, output){
   }, height = 700)
 }
 
+
+render_publisher_annual <- function(input, output){
+  
+  data_input <- reactive({
+    vgsales <- read_game_sales_csv()
+  })
+  
+  output[[publisher_outs[3]]] <- renderPlot({
+    vgsales <- data_input()
+    
+    df_annual_sales <- vgsales %>% 
+      group_by(Year_of_Release, Publisher) %>% 
+      summarise(Sales = sum(Global_Sales))
+    
+    df_top_annual_sales <- df_annual_sales %>% 
+      group_by(Year_of_Release)  %>%  
+      filter(Sales == max(Sales) & Year_of_Release >= 1980 & Year_of_Release <= 2016)
+    
+    ggplot(df_top_annual_sales) + geom_bar(stat = "identity", aes(Year_of_Release, Sales, fill = Publisher))  + 
+      scale_x_discrete(name ="Jahr") + scale_y_continuous(name = "Weltweit verkaufte Spiele (Angabe in Mio.)") + 
+      theme(text = element_text(size=20)) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      labs(fill = "Herausgeber") 
+    
+    
+  }, height = 700)
+}
+
+render_publisher_regional <- function(input, output){
+  
+  data_input <- reactive({
+    vgsales <- read_game_sales_csv()
+  })
+  
+  output[[publisher_outs[4]]] <- renderPlot({
+    vgsales <- data_input()
+    
+    df_publisher <- vgsales %>%
+      group_by(Publisher) %>% 
+      summarise(NA_Sales = sum(NA_Sales), EU_Sales = sum(EU_Sales), JP_Sales = sum(JP_Sales), Other_Sales = sum(Other_Sales))
+    
+    df_publisher_pivot <- gather(df_publisher, "NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales", key = "Region", value= "Sales")
+    df_top_publisher <- df_publisher_pivot %>%
+      group_by(Region) %>%
+      top_n(n = 3, wt = Sales) %>%
+      arrange(Region, desc(Sales))
+
+    facet_labels <- c("Europa", "Japan", "USA", "Rest der Welt")
+    names(facet_labels) <- c("EU_Sales", "JP_Sales",  "NA_Sales", "Other_Sales")
+    ggplot(df_top_publisher) + geom_bar(stat = "identity", aes(Publisher, Sales, fill = Publisher))  + 
+      scale_x_discrete(name ="Herausgeber") + scale_y_continuous(name = "Verkaufte Spiele (Angabe in Mio.)") + 
+      theme(text = element_text(size=20)) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      facet_grid(. ~ Region, scales = "free",  space = "free", labeller = labeller(Region = facet_labels)) + 
+      labs(fill = "Herausgeber") 
+    
+  }, height = 700)
+}
