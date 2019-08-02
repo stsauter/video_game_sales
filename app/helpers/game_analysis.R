@@ -1,5 +1,5 @@
 
-game_ins <- c("game_num_bars", "game_timespan", "game_salesplot_type")
+game_ins <- c("game_num_bars", "game_region", "game_timespan", "game_differ_platforms", "game_salesplot_type")
 game_outs <- c("games_plot", "game_sales_plot", "game_sales_rel_plot")
 
 tab_games_layout <- function(){
@@ -22,8 +22,18 @@ subtab_game_bestsellers <- function(){
                  
                ),
                
-               sliderInput(game_ins[2], "Release-Zeitraum:",  
-                           min = 1980, max = 2016, sep = "", value = c(1980, 2016))
+               selectizeInput(
+                 game_ins[2], 'Region:', choices = c("Global", "USA", "Europa", "Japan")
+                 
+               ),
+               
+               
+               sliderInput(game_ins[3], "Release-Zeitraum:",  
+                           min = 1980, max = 2016, sep = "", value = c(1980, 2016), animate = TRUE
+               ),
+               
+               checkboxInput(game_ins[4], "Nach Plattform unterscheiden", value = TRUE)
+               
              )       
       ),
       column(9,
@@ -40,7 +50,7 @@ subtab_game_sales <- function(){
     fluidRow(
       column(3,
              selectizeInput(
-               game_ins[3], 'Darstellung als', choices = c("Liniendiagramm", "Balkendiagramm")
+               game_ins[5], 'Darstellung als', choices = c("Liniendiagramm", "Balkendiagramm")
                
              )  
       )
@@ -80,19 +90,40 @@ render_top_games <- function(input, output){
   
   output[[game_outs[1]]] <- renderPlot({
     vgsales <- data_input()
-    timespan <- input[[game_ins[2]]]
- 
+    timespan <- input[[game_ins[3]]]
     filtered_df <- subset(vgsales, as.numeric(Year_of_Release) >= timespan[1] & as.numeric(Year_of_Release) <= timespan[2])
-    top_sales <- filtered_df[1:input[[game_ins[1]]], ]
-  
-    df <- data.frame(Name = top_sales$Name, Global_Sales = top_sales$Global_Sales, Platform = top_sales$Platform)
-    df <- df[order(df$Global_Sales),]
-    df <- ensure_unique_game_name(df)
-  
-    #  df$Name <- factor(df$Name, levels = df$Name[order(df$Global_Sales)])
-    ggplot(df) + geom_bar(stat = "identity", aes(x=reorder(Name, Global_Sales), Global_Sales, fill = Platform))  + coord_flip() +  
-      scale_x_discrete(name ="Spiel") + scale_y_continuous(name ="Weltweit verkaufte Exemplare (Angabe in Mio.)") + 
-      labs(fill = "Plattform") + scale_fill_manual(values = platform_colors()) + theme(text = element_text(size=20))
+    switch(input[[game_ins[2]]], "Global" = sales_data <- filtered_df$Global_Sales, 
+           "USA" = sales_data <- filtered_df$NA_Sales, 
+           "Europa" = sales_data <- filtered_df$EU_Sales,
+           "Japan" = sales_data <- filtered_df$JP_Sales)
+ 
+    switch(input[[game_ins[2]]], "Global" = x_label_prefix <- "Weltweit", 
+           "USA" = x_label_prefix <- "In den USA", 
+           "Europa" = x_label_prefix <- "In Europa", 
+           "Japan" = x_label_prefix <- "In Japan")
+    
+    df <- data.frame(Name = filtered_df$Name, Sales = sales_data, Platform = filtered_df$Platform)
+    
+    if(isTRUE(input[[game_ins[4]]])){
+      df <- df[order(df$Sales,decreasing = TRUE),]
+      top_sales <- df[1:input[[game_ins[1]]], ]
+      df <- data.frame(Name = top_sales$Name, Sales = top_sales$Sales, Platform = top_sales$Platform)
+      df <- ensure_unique_game_name(df)
+      #  df$Name <- factor(df$Name, levels = df$Name[order(df$Global_Sales)])
+      ggplot(df) + geom_bar(stat = "identity", aes(x=reorder(Name, Sales), Sales, fill = Platform))  + coord_flip() +  
+        scale_x_discrete(name ="Spiel") + scale_y_continuous(name = paste(x_label_prefix, "verkaufte Exemplare (Angabe in Mio.)")) + 
+        labs(fill = "Plattform") + scale_fill_manual(values = platform_colors()) + theme(text = element_text(size=20))
+    }
+    else{
+      df <- setNames(aggregate(list(df$Sales), by=list(df$Name), FUN=sum), c("Name", "Sales"))
+      df <- df[order(df$Sales,decreasing = TRUE),]
+      top_sales <- df[1:input[[game_ins[1]]], ]
+      df <- data.frame(Name = top_sales$Name, Sales = top_sales$Sales)
+      ggplot(df) + geom_bar(stat = "identity", aes(x=reorder(Name, Sales), Sales), fill = "steelblue")  + coord_flip() +  
+        scale_x_discrete(name ="Spiel") + scale_y_continuous(name = paste(x_label_prefix, "verkaufte Exemplare (Angabe in Mio.)")) + 
+        theme(text = element_text(size=20))
+    }
+
   }, height = 700)
 }
 
@@ -132,7 +163,7 @@ render_game_sales <- function(input, output){
   output[[game_outs[2]]] <- renderPlot({
 
     vgsales <- data_input()
-    chart_type <- input[[game_ins[3]]]
+    chart_type <- input[[game_ins[5]]]
     
     if (chart_type == "Liniendiagramm"){
       line_width <- 1.0
