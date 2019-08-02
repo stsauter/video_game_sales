@@ -1,10 +1,11 @@
 
 game_ins <- c("game_num_bars", "game_region", "game_timespan", "game_differ_platforms", "game_salesplot_type")
-game_outs <- c("games_plot", "game_sales_plot", "game_sales_rel_plot")
+game_outs <- c("games_plot", "games_top_region_plot", "game_sales_plot", "game_sales_rel_plot")
 
 tab_games_layout <- function(){
   tabsetPanel(type = "tabs",
               tabPanel("Bestseller", subtab_game_bestsellers()),
+              tabPanel("Bestseller je Region", subtab_game_region_bestsellers()),
               tabPanel("Verkaufszahlen", subtab_game_sales())
   )
 }
@@ -43,6 +44,19 @@ subtab_game_bestsellers <- function(){
   )
 }
 
+subtab_game_region_bestsellers <- function(){
+  fluidPage(
+    titlePanel("Top 3 Spiele je Region"),
+    br(),
+    br(),
+    fluidRow(
+      column(12,
+             plotOutput(game_outs[2])
+      )
+    )
+  )
+}
+
 subtab_game_sales <- function(){
   fluidPage(
     titlePanel("Zeitlicher Verlauf der Verkaufszahlen aller Spiele"),
@@ -57,7 +71,7 @@ subtab_game_sales <- function(){
     ),
     fluidRow(
       column(12,
-             plotOutput(game_outs[2])
+             plotOutput(game_outs[3])
       )
     ),
     br(),
@@ -65,7 +79,7 @@ subtab_game_sales <- function(){
     br(),
     fluidRow(
       column(12,
-             plotOutput(game_outs[3])
+             plotOutput(game_outs[4])
       )
     )
   )
@@ -75,6 +89,7 @@ subtab_game_sales <- function(){
 tab_games_rendering <- function(input, output){
     
   render_top_games(input, output)
+  render_top_region_games(input, output)
   render_game_sales(input, output)
 }
 
@@ -147,6 +162,36 @@ create_platform_colors <- function(platforms){
   return(colors)
 }
 
+render_top_region_games <- function(input, output){
+  
+  data_input <- reactive({
+    vgsales <- read_game_sales_csv()
+  })
+  
+  output[[game_outs[2]]] <- renderPlot({
+    vgsales <- data_input()
+    
+    df_games <- vgsales %>%
+      group_by(Name) %>% 
+      summarise(NA_Sales = sum(NA_Sales), EU_Sales = sum(EU_Sales), JP_Sales = sum(JP_Sales), Other_Sales = sum(Other_Sales))
+    
+    df_games_pivot <- gather(df_games, "NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales", key = "Region", value= "Sales")
+    df_top_games <- df_games_pivot %>%
+      group_by(Region) %>%
+      top_n(n = 3, wt = Sales) %>%
+      arrange(Region, desc(Sales))
+    
+    facet_labels <- c("Europa", "Japan", "USA", "Rest der Welt")
+    names(facet_labels) <- c("EU_Sales", "JP_Sales",  "NA_Sales", "Other_Sales")
+    ggplot(df_top_games) + geom_bar(stat = "identity", aes(Name, Sales, fill = Name))  + 
+      scale_x_discrete(name ="Spiel") + scale_y_continuous(name = "Verkaufte Exemplare (Angabe in Mio.)") + 
+      theme(text = element_text(size=20)) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      facet_grid(. ~ Region, scales = "free",  space = "free", labeller = labeller(Region = facet_labels)) + 
+      labs(fill = "Spiel") 
+   
+    
+  }, height = 700)
+}
 
 render_game_sales <- function(input, output){
   
@@ -160,7 +205,7 @@ render_game_sales <- function(input, output){
    
   })
   
-  output[[game_outs[2]]] <- renderPlot({
+  output[[game_outs[3]]] <- renderPlot({
 
     vgsales <- data_input()
     chart_type <- input[[game_ins[5]]]
@@ -184,7 +229,7 @@ render_game_sales <- function(input, output){
    
   })
   
-  output[[game_outs[3]]] <- renderPlot({
+  output[[game_outs[4]]] <- renderPlot({
     
     vgsales <- data_input()
     ggplot(vgsales) + geom_bar(stat = "identity", position = "fill", aes(Year_of_Release, Sales, fill = Region)) + 
