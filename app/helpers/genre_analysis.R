@@ -1,9 +1,10 @@
 genre_ins  <- c("Release-Zeitraum")
-genre_outs <- c("genre_plot","genre_plot2", "genre_plot3", "genre_plot4", "genre_plot5", "genre_plot6", "genre_plot7", "genre_plot8")
+genre_outs <- c("genre_plot","genre_plot2", "genre_plot3", "genre_plot4", "genre_plot5", "genre_plot6", "genre_plot7", "genre_plot8", "genre_plot9")
 
 tab_genre_layout <- function(){
   tabsetPanel(type = "tabs",
-              tabPanel("Allgemeines", subtab_genre_allg()),
+              tabPanel("Übersicht", subtab_genre_allg()),
+              tabPanel("Verkaufszahlen", subtab_genre_sales()),
               tabPanel("Abhängigkeiten", subtab_genre_korr()),
               tabPanel("Regionen", subtab_genre_region()),
               tabPanel("Shooters vs. Schießereien", subtab_genre_shootings())
@@ -25,7 +26,12 @@ subtab_genre_allg <- function(){
       column(12,
              plotOutput(genre_outs[1])
       )
-    ),
+    )
+  )
+}
+
+subtab_genre_sales <- function(){
+  fluidPage(
     br(),
     titlePanel("Verkaufszahlenentwicklung"),
     br(),
@@ -45,6 +51,12 @@ subtab_genre_korr <- function(){
     fluidRow(
       column(12,
              plotOutput(genre_outs[3])
+      )
+    ),
+    br(),
+    fluidRow(
+      column(12,
+             plotOutput(genre_outs[5])
       )
     )
   )
@@ -70,7 +82,7 @@ subtab_genre_shootings <- function(){
     br(),
     fluidRow(
       column(12,
-             plotOutput(genre_outs[5])
+             plotOutput(genre_outs[6])
       )
     ),
     br(),
@@ -78,14 +90,14 @@ subtab_genre_shootings <- function(){
     br(),
     fluidRow(
       column(9,
-             plotOutput(genre_outs[6])
+             plotOutput(genre_outs[7])
       ),
       fluidRow(
         column(3,
-               textOutput(genre_outs[7])
+               textOutput(genre_outs[8])
         ),
         column(3,
-               textOutput(genre_outs[8])
+               textOutput(genre_outs[9])
         )
       )
     )
@@ -97,6 +109,7 @@ subtab_genre_shootings <- function(){
 tab_genre_rendering <- function(input, output){
   
   render_genre_allg(input, output)
+  render_genre_sales(input, output)
   render_genre_korr(input, output)
   render_genre_region(input, output)
   render_genre_shootings(input, output)
@@ -107,15 +120,6 @@ render_genre_allg <- function(input, output){
   
   data_input <- reactive({
     vgsales <- read_game_sales_csv()
-  })
-  
-  data_input2 <-reactive({
-    vgsales <- read_game_sales_csv()
-    
-    sales_by_year_genre  <- aggregate(vgsales$Global_Sales,by=list(vgsales$Year_of_Release,vgsales$Genre), FUN=sum)
-    sales_by_year_genre  <- setNames(sales_by_year_genre, c("Year_of_Release","Genre", "Sales"))
-    sales_by_year_genre  <- subset(sales_by_year_genre, as.numeric(Year_of_Release) >= 1980 & as.numeric(Year_of_Release) <= 2016)
-#    vgsales_pivot <- gather(sales_by_year_genre, "Global_Sales", key = "Genre", value= "Sales"), wird nicht benötigt
   })
   
   output[[genre_outs[1]]] <- renderPlot({
@@ -133,11 +137,24 @@ render_genre_allg <- function(input, output){
         theme(text = element_text(size=20)) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + theme(legend.position = "none")
     }    
   )
+}
+
+render_genre_sales <- function(input, output){
+  
+  data_input <-reactive({
+    vgsales <- read_game_sales_csv()
+    
+    sales_by_year_genre  <- aggregate(vgsales$Global_Sales,by=list(vgsales$Year_of_Release,vgsales$Genre), FUN=sum)
+    sales_by_year_genre  <- setNames(sales_by_year_genre, c("Year_of_Release","Genre", "Sales"))
+    sales_by_year_genre  <- subset(sales_by_year_genre, as.numeric(Year_of_Release) >= 1980 & as.numeric(Year_of_Release) <= 2016)
+    #    vgsales_pivot <- gather(sales_by_year_genre, "Global_Sales", key = "Genre", value= "Sales"), wird nicht benötigt
+  })
+  
   output[[genre_outs[2]]] <- renderPlot({
     
-    vgsales <- data_input2()
+    vgsales <- data_input()
     line_width <- 1.0
-
+    
     ggplot(vgsales) + geom_line(aes(x = Year_of_Release, y = Sales, group = Genre, color = Genre), size = line_width) +
       scale_x_discrete(name ="Jahr") + scale_y_continuous(name ="Verkaufte Spiele (Angabe in Mio.)") +
       theme(text = element_text(size=20)) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
@@ -162,6 +179,15 @@ render_genre_korr <- function(input, output){
     line_width <- 1.0
     ggplot(vgsales,aes(x=Count, y=Sales, group = Genre, color = Genre)) + geom_point() +
       scale_x_continuous(name ="Anzahl Spiele") + scale_y_continuous(name ="Verkaufte Spiele (Angabe in Mio.)") 
+  }    
+  )
+  
+  output[[genre_outs[5]]] <- renderPlot({
+    
+    vgsales <- data_input()
+    line_width <- 1.0
+    ggplot(vgsales,aes(x=Year_of_Release, y=Count, group = Genre, color = Genre, size = Sales)) + geom_point() +
+      scale_x_discrete(name ="Jahr") + scale_y_continuous(name ="Anzahl Spiele") 
   }    
   )
 }
@@ -212,7 +238,7 @@ render_genre_shootings <- function(input, output){
     df <- data.frame(Sales = df_shooters$Sales, Incidents = shootings$Num_Incidents) 
   })  
   
-  output[[genre_outs[5]]] <- renderPlot({
+  output[[genre_outs[6]]] <- renderPlot({
     
     shootings <- shooting_incidents()
     ggplot(shootings) + geom_bar(stat = "identity", aes(x=Year, y=Num_Incidents), fill = "steelblue") + 
@@ -221,7 +247,7 @@ render_genre_shootings <- function(input, output){
     
   })    
   
-  output[[genre_outs[6]]] <- renderPlot({
+  output[[genre_outs[7]]] <- renderPlot({
     
     shooter <- shooters_shootings()
     
@@ -231,7 +257,7 @@ render_genre_shootings <- function(input, output){
     
   })    
   
-  output[[genre_outs[7]]] <- renderText({
+  output[[genre_outs[8]]] <- renderText({
     
     shooter <- shooters_shootings()
     coef <- cor(shooter$Incidents, shooter$Sales)
@@ -239,7 +265,7 @@ render_genre_shootings <- function(input, output){
     
   })  
   
-  output[[genre_outs[8]]] <- renderText({
+  output[[genre_outs[9]]] <- renderText({
    
     shooter <- shooters_shootings()
     coef <- cor(shooter$Incidents, shooter$Sales, method = "spearman")
