@@ -1,11 +1,12 @@
 genre_ins  <- c("Release-Zeitraum")
-genre_outs <- c("genre_plot","genre_plot2", "genre_plot3", "genre_plot4")
+genre_outs <- c("genre_plot","genre_plot2", "genre_plot3", "genre_plot4", "genre_plot5", "genre_plot6", "genre_plot7", "genre_plot8")
 
 tab_genre_layout <- function(){
   tabsetPanel(type = "tabs",
               tabPanel("Allgemeines", subtab_genre_allg()),
               tabPanel("Abhängigkeiten", subtab_genre_korr()),
-              tabPanel("Regionen", subtab_genre_region())
+              tabPanel("Regionen", subtab_genre_region()),
+              tabPanel("Shooters vs. Schießereien", subtab_genre_shootings())
   )
 }
 
@@ -62,12 +63,43 @@ subtab_genre_region <- function(){
   )
 }
 
+subtab_genre_shootings <- function(){
+  fluidPage(
+    br(),
+    titlePanel("Vom FBI erfasste Vorfälle durch Schusswaffen an öffentlichen Plätzen in den USA"),
+    br(),
+    fluidRow(
+      column(12,
+             plotOutput(genre_outs[5])
+      )
+    ),
+    br(),
+    titlePanel("Besteht eine Korrelation zwischen der Anzahl der Vorfälle und der Anzahl der verkauften Shooter-Spiele?"),
+    br(),
+    fluidRow(
+      column(9,
+             plotOutput(genre_outs[6])
+      ),
+      fluidRow(
+        column(3,
+               textOutput(genre_outs[7])
+        ),
+        column(3,
+               textOutput(genre_outs[8])
+        )
+      )
+    )
+  )
+}
+
+
 
 tab_genre_rendering <- function(input, output){
   
   render_genre_allg(input, output)
   render_genre_korr(input, output)
   render_genre_region(input, output)
+  render_genre_shootings(input, output)
 }
 
 
@@ -155,4 +187,64 @@ render_genre_region <- function(input, output){
       theme(text = element_text(size=20)) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
   }    
   )
+}
+
+render_genre_shootings <- function(input, output){
+  
+  shooting_incidents <- reactive({
+    shootings <- read_shooting_incidents_csv()
+    
+  })  
+  
+  data_input <- reactive({
+    vgsales <- read_game_sales_csv()
+  })  
+  
+  shooters_shootings <- reactive({
+    shootings <- shooting_incidents()
+    vgsales <- data_input()
+    
+    df_shooters <- vgsales %>% filter(Genre == "Shooter" & as.numeric(Year_of_Release) >= 2000 & as.numeric(Year_of_Release) <= 2016)
+    df_shooters <- df_shooters %>% 
+      group_by(Year_of_Release) %>% 
+      summarise(Sales = sum(NA_Sales))
+    
+    df <- data.frame(Sales = df_shooters$Sales, Incidents = shootings$Num_Incidents) 
+  })  
+  
+  output[[genre_outs[5]]] <- renderPlot({
+    
+    shootings <- shooting_incidents()
+    ggplot(shootings) + geom_bar(stat = "identity", aes(x=Year, y=Num_Incidents), fill = "steelblue") + 
+      scale_x_continuous(name ="Jahr") + scale_y_continuous(name = "Anzahl der Vorfälle") +
+      theme(text = element_text(size=20))
+    
+  })    
+  
+  output[[genre_outs[6]]] <- renderPlot({
+    
+    shooter <- shooters_shootings()
+    
+    ggplot(shooter, aes(x=Sales, y=Incidents)) + geom_point(stat = "identity", size = 3.0, color = "steelblue") +  geom_smooth(method = "lm", se = FALSE) +
+       scale_x_continuous(name ="Verkaufte Shooter-Spiele (Angabe in Mio.)") + scale_y_continuous(name ="Anzahl von Schusswaffenvorfällen") +
+      theme(text = element_text(size=20))
+    
+  })    
+  
+  output[[genre_outs[7]]] <- renderText({
+    
+    shooter <- shooters_shootings()
+    coef <- cor(shooter$Incidents, shooter$Sales)
+    paste("Bravais-Pearson Korrelationskoeffizient: ", round(coef, 3))
+    
+  })  
+  
+  output[[genre_outs[8]]] <- renderText({
+   
+    shooter <- shooters_shootings()
+    coef <- cor(shooter$Incidents, shooter$Sales, method = "spearman")
+    paste("Spearman Korrelationskoeffizient: ", round(coef, 3))
+    
+  })    
+  
 }
