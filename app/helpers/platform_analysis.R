@@ -4,9 +4,9 @@ platform_outs <- c("platform_plot","platform_plot2","platform_plot3","platform_p
 
 tab_platform_layout <- function(){
   tabsetPanel(type = "tabs",
-              tabPanel("Übersicht", subtab_top_selling_platform()),
-              tabPanel("Übersicht2", subtab_top_releasing_platform()),
-              tabPanel("Übersicht3", subtab_top_sellrelease_platform()),
+              tabPanel("Verkaufszahlen", subtab_top_selling_platform()),
+              tabPanel("Releases", subtab_top_releasing_platform()),
+              tabPanel("Durchschnitt Verkäufe/Releases", subtab_top_sellrelease_platform()),
               tabPanel("Jährliche Verkaufszahlen", subtab_sales_platform())
   )
 }
