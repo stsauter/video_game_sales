@@ -8,7 +8,6 @@ Der Datensatz mit den Schusswaffenvorfällen in den USA stammt von: [Active Shoot
 Folgende R-Bibliotheken wurden verwendet:
 * shiny
 * ggplot2
-* randomcoloR
 * tidyverse
 
 ## Starten der App

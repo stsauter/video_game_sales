@@ -1,6 +1,5 @@
 library(shiny)
 library(ggplot2)
-library(randomcoloR)
 library(tidyverse)
 
 source("helpers/raw_data.R")

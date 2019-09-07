@@ -169,11 +169,6 @@ ensure_unique_game_name <- function(game_df){
 }
 
 create_platform_colors <- function(platforms){
-
-  # colors <-distinctColorPalette(length(platforms))
-  # names(colors) <- platforms
-  # color_file <- tempfile("color_palette", fileext = ".rds")
-  # saveRDS(colors, color_file)
   colors <- readRDS("persistence/random_colors.rds")
   return(colors)
 }
