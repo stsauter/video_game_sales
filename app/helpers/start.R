@@ -22,7 +22,7 @@ tab_start_layout <- function(){
                        tags$li("Absatzvolumen in Europa"),
                        tags$li("Absatzvolumen in Japan"),
                        tags$li("Absatzvolumen in den restlichen Märkten"),
-                       tags$li("Gesmates Absatzvolumen weltweit"),
+                       tags$li("Gesamtes Absatzvolumen weltweit"),
                        br(),
                        br(),
                        "Der zugrundeliegende Datensatz stammt von Kaggle: ",

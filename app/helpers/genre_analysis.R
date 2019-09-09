@@ -125,10 +125,10 @@ subtab_genre_shootings <- function(){
       ),
       fluidRow(
         column(3,
-               textOutput(genre_outs[8])
+               h4(textOutput(genre_outs[8]))
         ),
         column(3,
-               textOutput(genre_outs[9])
+               h4(textOutput(genre_outs[9]))
         )
       )
     )
