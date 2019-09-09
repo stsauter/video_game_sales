@@ -1,7 +1,6 @@
 library(shiny)
 library(ggplot2)
 library(tidyverse)
-library(car)
 
 source("helpers/raw_data.R")
 source("helpers/start.R")

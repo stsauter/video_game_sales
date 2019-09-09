@@ -16,7 +16,7 @@ tab_genre_layout <- function(){
 subtab_genre_allg <- function(){
   fluidPage(
     br(),
-    titlePanel("Anzahl Spiele je Genre"),
+    titlePanel("Anzahl der veröffentlichten Spiele je Genre"),
     br(),
     fluidRow(
       column(3,
@@ -25,7 +25,7 @@ subtab_genre_allg <- function(){
                            min = 1980, max = 2016, sep = "", value = c(1980, 2016))
              )       
       ),         
-      column(12,
+      column(9,
              plotOutput(genre_outs[1])
       )
     )
@@ -51,16 +51,22 @@ subtab_genre_korr <- function(){
     titlePanel("Korrelation (Jeder Datenpunkt ein Genre)"),
     br(),
     fluidRow(
-      column(12,
+      column(9,
              plotOutput(genre_outs[3])
       ),
       fluidRow(
         column(3,
-               textOutput(genre_outs[10])
+               h4(textOutput(genre_outs[10]))
         ),
         column(3,
-               textOutput(genre_outs[11])
+               h4(textOutput(genre_outs[11]))
         )
+      )
+    ),
+    fluidRow(
+      column(9,
+             h4("Es gibt also bei den Genres einen Zusammenhang zwischen der Anzahl der veröffentlichten Spiele und der 
+                Anzahl der verkauften Spiele.")
       )
     )
   )
@@ -78,12 +84,14 @@ subtab_genre_korr2 <- function(){
       br(),
       fluidRow(
         column(3,
-               textOutput(genre_outs[12])
+               h4(textOutput(genre_outs[12]))
         ),
         column(3,
-               textOutput(genre_outs[13])
+               h4(textOutput(genre_outs[13]))
         )
       ),
+      br(),
+      titlePanel("Anzahl der veröffentlichten Spiele je Genre und Jahr"),
       br(),
       fluidRow(
         column(12,
@@ -117,6 +125,14 @@ subtab_genre_shootings <- function(){
              plotOutput(genre_outs[6])
       )
     ),
+
+    fluidRow(
+      column(6,
+             h4(tagList("Der zugrundeliegende Datensatz stammt von: ",
+                        a("Active Shooter Incidents", href="https://www.fbi.gov/about/partnerships/office-of-partner-engagement/active-shooter-incidents-graphics"))
+             )
+      )
+    ),
     titlePanel("Besteht eine Korrelation zwischen der Anzahl der Vorfälle und der Anzahl der verkauften Shooter-Spiele?"),
     br(),
     fluidRow(
@@ -131,7 +147,16 @@ subtab_genre_shootings <- function(){
                h4(textOutput(genre_outs[9]))
         )
       )
-    )
+    ),
+    fluidRow(
+      column(9,
+             h4("Aus den berechneten Korrelationskoeffizienten lässt sich kein eindeutiger Zusammenhang 
+                zwischen der Anzahl der Schusswaffenvorfälle und der Anzahl der verkauften Shooter-Spiele ableiten. 
+                Ein gewisser Trend lässt sich im Regressionsmodell allerdings schon beobachten.")
+             
+      )
+    ),
+    br()
   )
 }
 
@@ -167,8 +192,7 @@ render_genre_allg <- function(input, output){
       ggplot(df, aes(x=Genre, fill=Genre)) +geom_bar(stat="count") +
         scale_x_discrete(name ="Genre") + scale_y_continuous(name ="Anzahl Spiele") +
         theme(text = element_text(size=20)) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + theme(legend.position = "none")
-    }    
-  )
+    }, height = 500)
 }
 
 render_genre_sales <- function(input, output){
@@ -208,7 +232,7 @@ render_genre_korr <- function(input, output){
     
     vgsales <- data_input()
     ggplot(vgsales,aes(x=Count, y=Sales)) + geom_point(stat = "identity", size = 2.0, color = "steelblue") + geom_smooth(method = "lm", se = FALSE) +
-      scale_x_continuous(name ="Anzahl Spiele") + scale_y_continuous(name ="Verkaufte Spiele (Angabe in Mio.)") 
+      scale_x_continuous(name ="Anzahl Spiele") + scale_y_continuous(name ="Verkaufte Spiele (Angabe in Mio.)") + theme(text = element_text(size=20))
   }    
   )
   
@@ -246,7 +270,7 @@ render_genre_korr2 <- function(input, output){
     
     vgsales <- data_input()
     ggplot(vgsales,aes(x=Count, y=Sales, group = Genre, color = Genre)) + geom_point() + geom_smooth(method = "lm", se = FALSE) +
-      scale_x_continuous(name ="Verkaufte Spiele (Angabe in Mio.)") + scale_y_continuous(name ="Anzahl Spiele") 
+      scale_x_continuous(name ="Anzahl Spiele") + scale_y_continuous(name ="Verkaufte Spiele (Angabe in Mio.)") + theme(text = element_text(size=20))
   }    
   )
 
@@ -271,7 +295,7 @@ render_genre_korr2 <- function(input, output){
     vgsales <- data_input()
     line_width <- 1.0
     ggplot(vgsales,aes(x=Year_of_Release, y=Count, group = Genre, color = Genre, size = Sales)) + geom_point() +
-      scale_x_discrete(name ="Jahr") + scale_y_continuous(name ="Anzahl Spiele") 
+      scale_x_discrete(name ="Jahr") + scale_y_continuous(name ="Anzahl Spiele") + theme(text = element_text(size=20))
   }    
   )  
     
@@ -296,8 +320,7 @@ render_genre_region <- function(input, output){
       scale_x_discrete(name ="Genre") + scale_y_continuous(name ="Verkaufte Spiele (Angabe in Mio.)") +
       scale_fill_discrete(name = "Region", labels = c("Europa", "Japan", "USA", "Rest der Welt")) +
       theme(text = element_text(size=20)) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-  }    
-  )
+  }, height = 500)
 }
 
 render_genre_shootings <- function(input, output){

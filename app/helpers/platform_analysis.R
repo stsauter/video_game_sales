@@ -6,13 +6,13 @@ tab_platform_layout <- function(){
   tabsetPanel(type = "tabs",
               tabPanel("Verkaufszahlen", subtab_top_selling_platform()),
               tabPanel("Releases", subtab_top_releasing_platform()),
-              tabPanel("Durchschnitt Verkäufe/Releases", subtab_top_sellrelease_platform()),
+              tabPanel("Durchschnittl. Verkäufe je Release", subtab_top_sellrelease_platform()),
               tabPanel("Jährliche Verkaufszahlen", subtab_sales_platform())
   )
 }
 subtab_top_selling_platform <- function(){
     fluidPage(
-      titlePanel("Auf welcher Plattform wurden die meisten Spiele verkauft"),
+      titlePanel("Auf welcher Plattform wurden die meisten Spiele verkauft?"),
       br(),
       br(),
       fluidRow(
@@ -43,7 +43,7 @@ subtab_top_selling_platform <- function(){
 
 subtab_top_releasing_platform <- function(){
   fluidPage(
-    titlePanel("Auf welcher Plattform sind die meisten Spiele erschienen"),
+    titlePanel("Auf welcher Plattform sind die meisten Spiele erschienen?"),
     br(),
     br(),
     fluidRow(
@@ -68,7 +68,7 @@ subtab_top_releasing_platform <- function(){
 
 subtab_top_sellrelease_platform <- function(){
   fluidPage(
-    titlePanel("Sales/Anzahl_Spiele je Platform"),
+    titlePanel("Wie hoch sind die Spieleverkaufszahlen je Plattform im Durchschnitt?"),
     br(),
     br(),
     fluidRow(
@@ -147,7 +147,7 @@ render_top_selling_platform <- function(input, output){
     top_platforms <- df[1:num_results, ]
     df <- data.frame(Name = top_platforms$Platform, Sales = top_platforms$Sales)
     ggplot(df) + geom_bar(stat = "identity", aes(x=reorder(Name, Sales), Sales), fill = "steelblue")  + coord_flip() +  
-      scale_x_discrete(name ="Platform") + scale_y_continuous(name = paste(x_label_prefix, "verkaufte Spiele (Angabe in Mio.)")) + 
+      scale_x_discrete(name ="Plattform") + scale_y_continuous(name = paste(x_label_prefix, "verkaufte Spiele (Angabe in Mio.)")) + 
       theme(text = element_text(size=20))
     
   }, height = 700)
@@ -179,7 +179,7 @@ render_top_releasing_platform <- function(input, output){
     top_platforms <- df[1:num_results, ]
     df <- data.frame(Name = top_platforms$Platform, Counter = top_platforms$Counter)
     ggplot(df) + geom_bar(stat = "identity", aes(x=reorder(Name, Counter), Counter), fill = "steelblue")  + coord_flip() +  
-      scale_x_discrete(name ="Platform") + scale_y_continuous(name ="Anzahl Spiele") + 
+      scale_x_discrete(name ="Plattform") + scale_y_continuous(name ="Anzahl Spiele") + 
       theme(text = element_text(size=20))
     
   }, height = 700)
@@ -212,7 +212,7 @@ render_top_sellrelease_platform <- function(input, output){
     top_platforms <- df[1:num_results, ]
     df <- data.frame(Name = top_platforms$Platform, SalesCounter = top_platforms$SalesCounter)
     ggplot(df) + geom_bar(stat = "identity", aes(x=reorder(Name, SalesCounter), SalesCounter), fill = "steelblue")  + coord_flip() +  
-      scale_x_discrete(name ="Platform") + scale_y_continuous(name ="SalesCounter in Mio.") + 
+      scale_x_discrete(name ="Plattform") + scale_y_continuous(name ="Verkaufte Spiele je Release (Angabe in Mio.)") + 
       theme(text = element_text(size=20))
     
   }, height = 700)
