@@ -1,20 +1,16 @@
-library(shiny)
 
 shinyServer(function(input, output) {
-    output$salesPlot <- renderPlot({
-        
-        vgsales <- read_game_sales_csv()
-        
-        top5_sales <- vgsales[1:5, 10]
-        top5_names <- vgsales[1:5, 1]
-        barplot(top5_sales, names.arg=top5_names, col = 'darkgray', border = 'white')
-
-    })
-
+ 
+    tab_start_rendering(input, output)
+    tab_anova_rendering(input, output)
+    tab_games_rendering(input, output)
+    tab_platform_rendering(input, output)
+    tab_publisher_rendering(input, output)
+    tab_genre_rendering(input, output)
+    tab_rawdata_rendering(input, output)
+    
 })
 
 
-read_game_sales_csv <- function(){
-    vgsales <- read.csv2("./data/vgsales.csv", header = TRUE, sep = ",", dec=".")
-    
-}
+
+
